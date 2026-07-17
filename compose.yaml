@@ -1,0 +1,43 @@
+services:
+  summarizer:
+    build: . # use the dockerfile in current dir
+    container_name: summarizer
+    volumes: # input/output files for the container
+      - ./main.py:/usr/src/app/main.py:ro
+      - ./out:/usr/src/app/out
+    environment: 
+      - PYTHONUNBUFFERED=1 # makes python print output immediately
+      - OLLAMA_HOST=http://ollama:11434 # tells python where to find ollama container
+    command: tail -f /dev/null # run the command immediately; keeps the container alive
+    depends_on: # wait for the ollama container to be ready first
+      ollama:
+        condition: service_healthy
+    deploy: # adds gpu access
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+  ollama:
+    image: ollama/ollama:latest # get the latest ollama image
+    container_name: ollama
+    volumes: # use a persistent volume to save models
+      - ollama_data:/root/.ollama
+    deploy: # add gpu access
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck: # make sure ollama is up and running right
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  ollama_data:
