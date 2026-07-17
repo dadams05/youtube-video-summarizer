@@ -1,4 +1,4 @@
-# Local Video Summarizer
+# YouTube Video Summarizer
 
 A private, local tool for summarizing YouTube videos and local video files using Ollama. This project can be run natively on Windows or fully containerized via Docker.
 
